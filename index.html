@@ -21,12 +21,15 @@
 					<h3 class="panel-title">Reserve My Stop!</h3>
 				</div>
 				<div class="panel-body">
-					<form action="step3.html" method="get" role="form">
+					<form action="step3.html" method="get" role="form" id="form1">
 					<div class="form-group">
 						<input type="text" class="form-control" id="bus_number" placeholder="Bus Number" name="bus_number">
 					</div>
 					<div class="form-group">
-						<input type="text" name="address" id="address" class="form-control" value=""  title="Address" placeholder="destination address">	
+						<input type="text" name="address_from" id="address_from" class="form-control" value=""  title="Current Address" placeholder="current address">	
+					</div>
+					<div class="form-group">
+						<input type="text" name="address_ro" id="address_to" class="form-control" value=""  title="Destination Address" placeholder="destination address">	
 					</div>
 					<button type="submit" class="btn btn-primary">Submit</button>
 					</form>
@@ -40,13 +43,43 @@
 		<!-- Bootstrap JavaScript -->
 		<script src="js/vendor/bootstrap.js"></script>
 		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=">    </script>
-		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=">    </script>
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places">    </script>
     		<script src="js/app/app.js"></script>
 		<script type="text/javascript">
 		var directionsService = new google.maps.DirectionsService();
+		var autocomplete = new google.maps.places.Autocomplete((document.getElementById('address_to')),{ types: ['geocode'] });
+		var browserSuportFlag= new Boolean();
+		
+		function geolocate() {
+			  if (navigator.geolocation) {
+			    navigator.geolocation.getCurrentPosition(function(position) {
+			      var geolocation = new google.maps.LatLng(
+			          position.coords.latitude, position.coords.longitude);
+			      autocomplete.setBounds(new google.maps.LatLngBounds(geolocation,
+			          geolocation));
+			          
+			      geocoder.geocode({'latLng': geolocation}, function(results, status) {
+			            if(status == google.maps.GeocoderStatus.OK) {
+			            	console.log(results[0]['formatted_address']);
+			            	$("#address_from").val(results[0]['formatted_address']);
+			        	};
+        			});
+			      
+			    });
+			  }
+			  // Browser doesn't support Geolocation
+			  else {
+			    browserSupportFlag = false;
+			    console.log("Browser doesn't support Geolocation");
+			    $("#address_from").val("Browser doesn't support Geolocation");
+			  }
+
+			};
+			
+		
 		function calculate_route(){
 			var request = {
-    			  origin:"Via polibio, Roma",
+    			  origin:,
       			  destination:"Piazza Augusto Imperatore, Roma",
       			  travelMode: google.maps.TravelMode.TRANSIT
   			};
@@ -56,8 +89,13 @@
   			});
 		}
 		$(document).ready(function(){
-			calculate_route();
+			geolocate();
+			
 			});
+		$("#form1").submit(function(event){
+			event.preventDefault();
+			calculate_route();
+		})	
 		</script>
 	</body>
 </html>
