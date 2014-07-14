@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Title Page</title>
+		<meta charset="UTF-8">
+		<meta name=description content="">
+		<meta name=viewport content="width=device-width, initial-scale=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<!-- Bootstrap CSS -->
+		<link rel="stylesheet/less" type="text/css" href="less/app/app.less" />
+		<link href='http://fonts.googleapis.com/css?family=Dosis' rel='stylesheet' type='text/css'>
+		<script src="js/vendor/less.js" type="text/javascript"></script>
+		
+	</head>
+	<body>
+	<div class="container-fluid">
+	<div class="row">	
+		<div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h3 class="panel-title">Reserve My Stop!</h3>
+				</div>
+				<div class="panel-body">
+					<form action="step3.html" method="get" role="form" id="form1">
+					<div class="form-group">
+						<input type="text" class="form-control" id="bus_number" placeholder="Bus Number" name="bus_number">
+					</div>
+					<div class="form-group">
+						<input type="text" name="address_from" id="address_from" class="form-control" value=""  title="Current Address" placeholder="current address">	
+					</div>
+					<div class="form-group">
+						<input type="text" name="address_ro" id="address_to" class="form-control" value=""  title="Destination Address" placeholder="destination address">	
+					</div>
+					<button type="submit" class="btn btn-primary">Submit</button>
+					</form>
+				</div>
+			</div>	 
+		</div>
+	</div>
+		<!-- jQuery -->
+		<script src="js/vendor/jquery-1.11.1.min.js"></script>
+		<script src="js/vendor/jquery.xmlrpc.js"></script>
+		<!-- Bootstrap JavaScript -->
+		<script src="js/vendor/bootstrap.js"></script>
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places&key=">    </script>
+		<!--
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places">    </script>
+    	-->
+    		<script src="js/app/app.js"></script>
+		<script type="text/javascript">
+		var directionsService = new google.maps.DirectionsService();
+		var autocomplete = new google.maps.places.Autocomplete((document.getElementById('address_to')),{ types: ['geocode'] });
+		var browserSuportFlag= new Boolean();
+		var geocoder = new google.maps.Geocoder();
+		function geolocate() {
+			  if (navigator.geolocation) {
+			    navigator.geolocation.getCurrentPosition(function(position) {
+			      var geolocation = new google.maps.LatLng(
+			          position.coords.latitude, position.coords.longitude);
+			      autocomplete.setBounds(new google.maps.LatLngBounds(geolocation,
+			          geolocation));
+			          
+			      geocoder.geocode({'latLng': geolocation}, function(results, status) {
+			            if(status == google.maps.GeocoderStatus.OK) {
+			            	console.log(results[0]['formatted_address']);
+			            	$("#address_from").val(results[0]['formatted_address']);
+			        	};
+        			});
+			      
+			    });
+			  }
+			  else {
+			    browserSupportFlag = false;
+			    console.log("Browser doesn't support Geolocation");
+			    $("#address_from").val("Browser doesn't support Geolocation");
+			  }
+
+			};
+			
+		
+		function calculate_route(){
+			var request = {
+    			  origin: $("#address_from").val(),
+      			  destination:$("#address_to").val(),
+      			  travelMode: google.maps.TravelMode.TRANSIT
+  			};
+  			directionsService.route(request, function(response, status) {
+    			if (status == google.maps.DirectionsStatus.OK) 
+    				{
+    					transit_data=response.routes[0].legs[0].steps.filter(function(e){ if (e.travel_mode=="TRANSIT") return true; })
+    					console.log(response);
+    					$.each(transit_data, function (id,argument) {
+    						console.log(argument.start_point);
+    					});
+    					
+
+    				}
+  			});
+		}
+		$(document).ready(function(){
+			geolocate();
+			$("#address_to").val("Via Polibio, Roma");
+			});
+		$("#form1").submit(function(event){
+			event.preventDefault();
+			calculate_route();
+		})	
+		</script>
+	</body>
+</html>
