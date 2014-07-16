@@ -1,13 +1,13 @@
 require "sinatra"
-require "xmlrpc/client"
+require_relative "./lib/xmlrpc/client"
 
 #API_KEY="TTU8rKwDFEN4uL4iuyO9wlNDTJE78kXR"
 API_KEY='bL5fwQZNDFdHkIR1hjxYCFIBrVRV78Hw'
 get '/authenticate' do |variable|
-	server = XMLRPC::Client.new("'http://muovi.roma.it/", "/ws/xml/", 80)
+	server = XMLRPC::Client.new("muovi.roma.it", "/ws/xml/autenticazione/1", 80)
 	begin
-	  param = server.call("autenticazione.Accedi", API_KEY)
-	  puts "#{param}"
+	  token = server.call("autenticazione.Accedi", API_KEY, '')
+	  puts "#{token}"
 	rescue XMLRPC::FaultException => e
 	  puts "Error:"
 	  puts e.faultCode
