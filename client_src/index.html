@@ -21,7 +21,7 @@
 					<h3 class="panel-title">Reserve My Stop!</h3>
 				</div>
 				<div class="panel-body">
-					<form action="step3.html" method="get" role="form" id="form1">
+					<form action="#" method="get" role="form" id="form1">
 					<div class="form-group">
 						<input type="text" class="form-control" id="bus_number" placeholder="Bus Number" name="bus_number">
 					</div>
@@ -30,6 +30,11 @@
 					</div>
 					<div class="form-group">
 						<input type="text" name="address_ro" id="address_to" class="form-control" value=""  title="Destination Address" placeholder="destination address">	
+					</div>
+					<div class="form-group">
+						<textarea name="bus_stops" id="bus_stops" class="form-control"   title="Destination Address" placeholder="destination address">	
+
+						</textarea>
 					</div>
 					<button type="submit" class="btn btn-primary">Submit</button>
 					</form>
@@ -78,7 +83,7 @@
 			};
 			
 		
-		function calculate_route(){
+		function calculate_route_google(){
 			var request = {
     			  origin: $("#address_from").val(),
       			  destination:$("#address_to").val(),
@@ -96,6 +101,17 @@
 
     				}
   			});
+		}
+		function calculate_route(){
+			$.ajax({
+  				url: "htttp://vps77850.ovh.net:4567/trace_route",
+  				data: {	address_from: $("#address_from").val(), 
+  						bus_number: $("#bus_number").val(), 
+  						address_to: $("#address_from").val()}
+				}).done(function(data) {
+  				 $("#bus_stops").val(data);
+				});
+			
 		}
 		$(document).ready(function(){
 			geolocate();

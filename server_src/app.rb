@@ -40,17 +40,17 @@ class AtacProxy
 		  puts e.faultString
 		end			
 	end
-	def get_path(from, to )
+	def get_stops(percorso, mezzo, data )
 	  #https://bitbucket.org/agenziamobilita/muoversi-a-roma/wiki/percorso.Cerca
 	  begin
 			XMLRPC::Config.module_eval do
 			    remove_const :ENABLE_NIL_PARSER
 			    const_set :ENABLE_NIL_PARSER, true
 			end
-			server = XMLRPC::Client.new("muovi.roma.it", "/ws/xml/percorso/2", 80)
+			server = XMLRPC::Client.new("muovi.roma.it", "/ws/xml/paline/7", 80)
 
 			server.http_header_extra = {"Content-Type" => "text/xml"}
-			@path = server.call("percorso.Cerca", @token,  from, to, {mezzo: 1, piedi: 0, bus:true, metro:false, ferro:false, carpooling:false, max_distanza_bici:0 },Time.now.strftime("%Y-%m-%d %H:%M:%S"), "IT")
+			@path = server.call("paline.Percorso", @token,  percorso, mezzo, data, "IT")
 			
 			return @path 
 		rescue XMLRPC::FaultException => e
@@ -78,12 +78,56 @@ end
 
 get '/trace_route' do
 	@atac=AtacProxy.new(session[:token])
+	bus_number=params[:bus_number] || "913"
+
 	bus_stop_number=params[:bus_stop_number] || "fermata:70359"
-	address_from=params[:address_from] || "Largo Chigi, Roma"
+	address_from=params[:address_from] || "Piazza Cavour"
 	geo_from=params[:geo_from] 
 	address_to=params[:address_to] || "Via Polibio"
 
-	@atac.search_path(bus_stop_number, address_to)
+	r1=@atac.search_path(address_from, address_to)
+
+	tratto=r1["indicazioni"].map{|x| x["tratto"]}.compact.select{|x| x["id_linea"]==bus_number}.first
+	percorso=tratto["id"].split("-").last
+
+	r2=@atac.get_stops(percorso,"","")
+	fermate=r2["risposta"]["fermate"]
+
+	nodi=r1["indicazioni"].map{|x| x["nodo"] if x["nodo"] && x["nodo"]["tipo"]=="F"}.compact
+	fermata_stop=fermate.select{|x| x["id_palina"]==nodi[1]["id"]}
+	
+	percorso ||= "55148"
+	
+	last_resp=fermate.map do |f|
+	 f["start"]="1" if f["id_palina"]==nodi[0]["id"]
+	 f["current"]="1" if f["id_palina"]==nodi[0]["id"]
+	 f["last"]="1" if f["id_palina"]==nodi[1]["id"]
+	 f
+	end
+	x={
+		#tratto_1: tratto,
+		#percorso: percorso,
+		#nodo_start: nodi[0],
+		#nodo_end: nodi[1],
+		#fermata: fermata_stop,
+
+		fermate: last_resp,
+
+
+		#r1_indicazioni_count: r1["indicazioni"].size,
+		#r1_indicazioni_nodi: r1["indicazioni"].map{|x| x["nodo"]}.compact,
+		#r1_indicazioni_tratti: r1["indicazioni"].map{|x| x["tratto"]}.compact,
+		#r1_stat: r1["stat"],
+		#r2: r2,
+	    #r2_fermate: r2["risposta"]["fermate"],
+	    #r2_percorso: r2["risposta"]["percorso"],
+	    #r2_percorsi: r2["risposta"]["percorsi"],
+	    #r2_orari_partenza_vicini: r2["risposta"]["orari_partenza_vicini"],
+	    #r2_orari_partenza: r2["risposta"]["orari_partenza"],
+	    #r2_nessuna_partenza: r2["risposta"]["nessuna_partenza"]
+	}
+	
+	
 	
 end
 
