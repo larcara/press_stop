@@ -76,13 +76,16 @@ get '/authenticate' do
 	session[:token]
 end
 
+get 'home' do
+ erb :test
+end
 get '/trace_route' do
 	@atac=AtacProxy.new(session[:token])
 	bus_number=params[:bus_number] || "913"
 
 	bus_stop_number=params[:bus_stop_number] || "fermata:70359"
 	address_from=params[:address_from] || "Piazza Cavour"
-	geo_from=params[:geo_from] 
+	geo_from=params[:geo_from]
 	address_to=params[:address_to] || "Via Polibio"
 
 	r1=@atac.search_path(address_from, address_to)
@@ -95,7 +98,7 @@ get '/trace_route' do
 
 	nodi=r1["indicazioni"].map{|x| x["nodo"] if x["nodo"] && x["nodo"]["tipo"]=="F"}.compact
 	fermata_stop=fermate.select{|x| x["id_palina"]==nodi[1]["id"]}
-	
+
 	percorso ||= "55148"
 	
 	last_resp=fermate.map do |f|
