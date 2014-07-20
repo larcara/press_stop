@@ -14,7 +14,7 @@
 	</head>
 	<body>
 	<div class="container-fluid">
-	<div class="row step1">	
+	<div class="row" id="step1">	
 		<div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
 			<div class="panel panel-default">
 				<div class="panel-heading">
@@ -41,7 +41,7 @@
 				</div>
 			</div>	 
 		</div>
-		<div class="row step2" >	
+		<div class="row " id="step2">	
 		<div class="panel panel-default">
 			  <div class="panel-heading">
 					<h3 class="panel-title">Reserve Your Stop!</h3>
@@ -118,17 +118,20 @@
 		<script src="js/vendor/jquery.xmlrpc.js"></script>
 		<!-- Bootstrap JavaScript -->
 		<script src="js/vendor/bootstrap.js"></script>
-		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places&key=">    </script>
-		<!--
+		<script type="text/javascript" 
+			src="https://xxxxmaps.xxxgoogleapis.com/maps/api/js?key=AIzaSyBsZ-aje5ZmeJtR23Y5bdz5cB-n3SQ7ue0&sensor=false&libraries=places">    </script>
+			<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places"></script>
+		<!--  
 		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places">    </script>
     	-->
     		<script src="js/app/app.js"></script>
 		<script type="text/javascript">
-		var api_url="http://127.0.0.1::4567"
-		//var directionsService = new google.maps.DirectionsService();
+		var api_url="http://127.0.0.1:4567"
+		var directionsService = new google.maps.DirectionsService();
 		var autocomplete = new google.maps.places.Autocomplete((document.getElementById('address_to')),{ types: ['geocode'] });
 		var browserSuportFlag= new Boolean();
 		var geocoder = new google.maps.Geocoder();
+
 		function geolocate() {
 			  if (navigator.geolocation) {
 			    navigator.geolocation.getCurrentPosition(function(position) {
@@ -176,25 +179,31 @@
   			});
 		}
 		function calculate_route(){
+			
 			$.ajax({
   				url: api_url + "/trace_route",
+  				crossDomain: true,
   				data: {	address_from: $("#address_from").val(), 
   						bus_number: $("#bus_number").val(), 
-  						address_to: $("#address_from").val()}
+  						address_to: $("#address_to").val()}
 				}).done(function(data) {
+					alert("www2");
   				 $("#bus_stops").val(data);
 				});
 			
 		}
 		
 		$(document).ready(function(){
-			geolocate();
+			$("#step2").hide();
+			//geolocate();
 			$("#address_to").val("Via Polibio, Roma");
-			});
+			
 		$("#form1").submit(function(event){
 			event.preventDefault();
+
 			calculate_route();
-		})	
+		})
+		});	
 		</script>
 	</body>
 </html>

@@ -1,9 +1,20 @@
 require "sinatra"
 require "sinatra/reloader" if development?
+require "haml"
+require "less"
+require 'therubyracer'
 require_relative "./lib/xmlrpc/client"
 
 #API_KEY="TTU8rKwDFEN4uL4iuyO9wlNDTJE78kXR"
 API_KEY='bL5fwQZNDFdHkIR1hjxYCFIBrVRV78Hw'
+
+# before do
+#    content_type :json    
+#    headers 'Access-Control-Allow-Origin' => '*', 
+#             'Access-Control-Allow-Methods' => ['OPTIONS', 'GET', 'POST']  
+# end
+
+# set :protection, false
 
 class AtacProxy
 	attr_accessor :token
@@ -61,14 +72,7 @@ class AtacProxy
 	end
 end
 
-class BusStop
-	BUS_STOPS={
-		#route_id,service_id,trip_id,direction_id,shape_id
-  		"913.1"=>[["4011354429","41.905318521064","12.4772504271675","1"],["4011354429","41.9053872565387","12.4772581569602","2"]],
-  		"913.0"=>[["1278125004","41.9389642900362","12.4211157767467","1"],["1278125004","41.9390736627","12.4210148191618","2"]]
-	}
 
-end
 
 get '/authenticate' do 
 	@atac=AtacProxy.new(session[:token])
@@ -76,12 +80,15 @@ get '/authenticate' do
 	session[:token]
 end
 
-get 'home' do
- erb :test
+get '/application.css' do
+  less :"less/app/app", :paths => ["views"]
+end
+get '/home' do 
+  haml :home
 end
 get '/trace_route' do
 	@atac=AtacProxy.new(session[:token])
-	bus_number=params[:bus_number] || "913"
+	bus_number=params[:bus_number] || "913F"
 
 	bus_stop_number=params[:bus_stop_number] || "fermata:70359"
 	address_from=params[:address_from] || "Piazza Cavour"
@@ -90,6 +97,7 @@ get '/trace_route' do
 
 	r1=@atac.search_path(address_from, address_to)
 
+	puts  r1 
 	tratto=r1["indicazioni"].map{|x| x["tratto"]}.compact.select{|x| x["id_linea"]==bus_number}.first
 	percorso=tratto["id"].split("-").last
 
@@ -97,6 +105,9 @@ get '/trace_route' do
 	fermate=r2["risposta"]["fermate"]
 
 	nodi=r1["indicazioni"].map{|x| x["nodo"] if x["nodo"] && x["nodo"]["tipo"]=="F"}.compact
+	puts  nodi.inspect
+	puts  fermate.inspect
+
 	fermata_stop=fermate.select{|x| x["id_palina"]==nodi[1]["id"]}
 
 	percorso ||= "55148"
@@ -107,6 +118,8 @@ get '/trace_route' do
 	 f["last"]="1" if f["id_palina"]==nodi[1]["id"]
 	 f
 	end
+		puts last_resp.inspect
+		return last_resp.to_s
 	x={
 		#tratto_1: tratto,
 		#percorso: percorso,
@@ -114,7 +127,7 @@ get '/trace_route' do
 		#nodo_end: nodi[1],
 		#fermata: fermata_stop,
 
-		fermate: last_resp,
+		fermate: last_resp
 
 
 		#r1_indicazioni_count: r1["indicazioni"].size,

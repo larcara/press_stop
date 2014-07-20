@@ -2,7 +2,14 @@ require 'xmlrpc/client'
 #1.9.3
 module XMLRPC
   class Client
-    def do_rpc_2(request, async=false)
+    def do_rpc(request, async=false)
+      if RUBY_VERSION=="1.9.3" 
+        return do_rpc_ruby_19(request, async)
+      else
+        return do_rpc_ruby_22(request, async)
+      end
+    end
+    def do_rpc_ruby_22(request, async=false)
       header = {
        "User-Agent"     =>  USER_AGENT,
        "Content-Type"   => "text/xml; charset=utf-8",
@@ -76,7 +83,7 @@ module XMLRPC
 
 
 # File lib/xmlrpc/client.rb, line 500
-    def do_rpc(request, async=false)
+    def do_rpc_ruby_19(request, async=false)
       header = {
        "User-Agent"     =>  USER_AGENT,
        "Content-Type"   => "text/xml; charset=utf-8",
