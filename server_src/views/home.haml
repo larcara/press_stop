@@ -1,0 +1,172 @@
+%html{:lang => "en"}
+  %head
+    %title Title Page
+    %meta{:charset => "UTF-8"}
+      %meta{:content => "", :name => "description"}
+        %meta{:content => "width=device-width, initial-scale=1", :name => "viewport"}
+          %meta{:content => "width=device-width, initial-scale=1.0", :name => "viewport"}
+            / Bootstrap CSS
+            //%link{:href => "less/app/app.less", :rel => "stylesheet/less", :type => "text/css"}/
+            %link{:href => "application.css", :rel => "stylesheet", :type => "text/css"}/
+            %link{:href => "css/timeline2.css", :rel => "stylesheet", :type => "text/css"}/
+            %link{:href => "http://fonts.googleapis.com/css?family=Dosis", :rel => "stylesheet", :type => "text/css"}
+            //%script{:src => "js/vendor/less.js", :type => "text/javascript"}
+  %body
+    .container-fluid
+      #step1.row
+        .col-xs-12.col-sm-12.col-md-6.col-lg-6
+          .panel.panel-default
+            .panel-heading
+              %h3.panel-title Reserve My Stop!
+            .panel-body
+              %form#form1{:action => "#", :method => "get", :role => "form"}
+                .form-group
+                  %input#bus_number.form-control{:name => "bus_number", :placeholder => "Bus Number", :type => "text"}
+                .form-group
+                  %input#address_from.form-control{:name => "address_from", :placeholder => "current address", :title => "Current Address", :type => "text", :value => ""}
+                .form-group
+                  %input#address_to.form-control{:name => "address_ro", :placeholder => "destination address", :title => "Destination Address", :type => "text", :value => ""}
+                .form-group
+                  %textarea#bus_stops.form-control{:name => "bus_stops", :placeholder => "destination address", :title => "Destination Address"}
+                %button.btn.btn-primary{:type => "submit"} Submit
+        #step2.row
+          .panel.panel-default
+            .panel-heading
+              %h3.panel-title Reserve Your Stop!
+            .panel-body
+              %ul.timeline
+                %li.timeline-inverted
+                  .timeline-badge
+                    %i.glyphicon.glyphicon-check
+                  .timeline-panel
+                    .timeline-heading
+                      %h5.timeline-title Current Stop
+                      %p
+                        %small.text-muted
+                          %i.glyphicon.glyphicon-time
+                          11 hours
+                    .timeline-body
+                %li
+                  .timeline-badge.success
+                    %i.glyphicon.glyphicon-check
+                  .timeline-panel
+                    .timeline-heading
+                      %h5.timeline-title Stop ...
+                      %p
+                        %small.text-muted
+                          %i.glyphicon.glyphicon-time
+                          11 hours
+                    .timeline-body
+                %li
+                  .timeline-badge.success
+                    %i.glyphicon.glyphicon-check
+                  .timeline-panel
+                    .timeline-heading
+                      %h5.timeline-title Stop ...
+                      %p
+                        %small.text-muted
+                          %i.glyphicon.glyphicon-time
+                          11 hours
+                    .timeline-body
+                %li.timeline-inverted
+                  .timeline-badge.warning
+                    %i.glyphicon.glyphicon-credit-card
+                  .timeline-panel
+                    .timeline-heading
+                      %h4.timeline-title Reserve Next Stop!
+                    .timeline-body
+                %li
+                  .timeline-badge.danger
+                    %i.glyphicon.glyphicon-credit-card
+                  .timeline-panel
+                    .timeline-heading
+                      %h4.timeline-title My Stop
+                    .timeline-body
+      / jQuery
+      %script{:src => "js/vendor/jquery-1.11.1.min.js"}
+      %script{:src => "js/vendor/jquery.xmlrpc.js"}
+      / Bootstrap JavaScript
+      %script{:src => "js/vendor/bootstrap.js"}
+      %script{:src => "https://xxxxmaps.xxxgoogleapis.com/maps/api/js?key=AIzaSyBsZ-aje5ZmeJtR23Y5bdz5cB-n3SQ7ue0&sensor=false&libraries=places", :type => "text/javascript"}
+      %script{:src => "http://maps.googleapis.com/maps/api/js?libraries=places", :type => "text/javascript"}
+      /
+        <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places">    </script>
+      %script{:src => "js/app/app.js"}
+:javascript
+  var api_url="http://127.0.0.1:4567"
+  var directionsService = new google.maps.DirectionsService();
+  var autocomplete = new google.maps.places.Autocomplete((document.getElementById('address_to')),{ types: ['geocode'] });
+  var browserSuportFlag= new Boolean();
+  var geocoder = new google.maps.Geocoder();
+
+  function geolocate() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var geolocation = new google.maps.LatLng(
+            position.coords.latitude, position.coords.longitude);
+
+        autocomplete.setBounds(new google.maps.LatLngBounds(geolocation,
+            geolocation));
+            
+        geocoder.geocode({'latLng': geolocation}, function(results, status) {
+              if(status == google.maps.GeocoderStatus.OK) {
+                console.log(results[0]['formatted_address']);
+                $("#address_from").val(results[0]['formatted_address']);
+            };
+          });
+        
+      });
+    }
+    else {
+      browserSupportFlag = false;
+      console.log("Browser doesn't support Geolocation");
+      $("#address_from").val("Browser doesn't support Geolocation. Type start Address");
+    }
+
+  };
+  
+  function calculate_route_google(){
+    var request = {
+          origin: $("#address_from").val(),
+            destination:$("#address_to").val(),
+            travelMode: google.maps.TravelMode.TRANSIT
+      };
+      directionsService.route(request, function(response, status) {
+        if (status == google.maps.DirectionsStatus.OK) 
+          {
+            transit_data=response.routes[0].legs[0].steps.filter(function(e){ if (e.travel_mode=="TRANSIT") return true; })
+            console.log(response);
+            $.each(transit_data, function (id,argument) {
+              console.log(argument.start_point);
+            });
+            
+
+          }
+      });
+  };
+
+  function calculate_route(){
+      $.ajax({
+        url: api_url + "/trace_route",
+        crossDomain: true,
+        data: {  address_from: $("#address_from").val(), 
+        bus_number: $("#bus_number").val(), 
+        address_to: $("#address_to").val()}
+        }).done(function(data) {
+          alert("www2");
+          $("#bus_stops").val(data);
+        });
+
+      };
+
+  $(document).ready(function(){
+      $("#step2").hide();
+      //geolocate();
+      $("#address_to").val("Via Polibio, Roma");
+
+      $("#form1").submit(function(event){
+      event.preventDefault();
+
+      calculate_route();
+      })
+  });
