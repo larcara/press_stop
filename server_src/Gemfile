@@ -6,3 +6,6 @@ gem 'less'
 gem 'therubyracer'
 gem 'mongoid'
 gem 'bson_ext'
+gem 'omniauth-twitter'
+gem 'twitter'
+
