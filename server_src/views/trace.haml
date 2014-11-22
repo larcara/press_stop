@@ -1,0 +1,143 @@
+%html{:lang => "en"}
+  %head
+    %title Title Page
+    %meta{:charset => "UTF-8"}
+      %meta{:content => "", :name => "description"}
+        %meta{:content => "width=device-width, initial-scale=1", :name => "viewport"}
+          %meta{:content => "width=device-width, initial-scale=1.0", :name => "viewport"}
+            / Bootstrap CSS
+
+            %link{:href => "application.css", :rel => "stylesheet", :type => "text/css"}/
+            %link{:href => "css/timeline2.css", :rel => "stylesheet", :type => "text/css"}/
+            %link{:href => "http://fonts.googleapis.com/css?family=Dosis", :rel => "stylesheet", :type => "text/css"}
+            //%script{:src => "js/vendor/less.js", :type => "text/javascript"}
+  %body
+    .container-fluid
+      //=@last_resp.inspect
+      .row
+        .col-xs-12.col-sm-12.col-md-6.col-lg-6
+          .panel.panel-default
+            .panel-heading
+              %h3.panel-title Reserve My Stop!
+            .panel-body
+              -if !@error.blank?
+                .well
+                  =@error
+              %ul.timeline
+                -@last_resp.each do |f|
+                  -if f[:show]
+                    %li.timeline-inverted
+                      .timeline-badge
+                        %i.glyphicon.glyphicon-check
+                      .timeline-panel
+                        .timeline-heading
+                          %h6.timeline-title
+                            =f[:nome]
+                        %p
+                          %a{href:"/trace?&lat=#{f[:lat]}&lng=#{f[:lng]}"}=f[:distance]
+                          %small.text-muted
+                            %i.glyphicon.glyphicon-time
+                              =f[:lat]
+                              =f[:lng]
+                              =f[:final]
+                        //.timeline-body
+      / jQuery
+      %script{:src => "js/vendor/jquery-1.11.1.min.js"}
+      //%script{:src => "js/vendor/bootstrap.js"}
+      %script{:src => "//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"}
+      //%script{:src => "https://maps.googleapis.com/maps/api/js?libraries=places", :type => "text/javascript"}
+      %script{:src => "js/app/app.js"}
+:javascript
+   var directionsService;
+   var autocomplete_from ;
+   var autocomplete_to ;
+   var browserSuportFlag;
+   var geocoder ;
+
+  function geolocate() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var geolocation = new google.maps.LatLng(
+            position.coords.latitude, position.coords.longitude);
+
+        autocomplete_from.setBounds(new google.maps.LatLngBounds(geolocation,geolocation));
+        autocomplete_to.setBounds(new google.maps.LatLngBounds(geolocation,geolocation));
+            
+        geocoder.geocode({'latLng': geolocation}, function(results, status) {
+              if(status == google.maps.GeocoderStatus.OK) {
+                //console.log(results[0]['formatted_address']);
+                $("#address_from").val(results[0]['formatted_address']);
+                
+            };
+          });
+        
+      });
+    }
+    else {
+      browserSupportFlag = false;
+      console.log("Browser doesn't support Geolocation");
+      $("#address_from").val("Browser doesn't support Geolocation. Type start Address");
+    }
+
+  };
+  
+ 
+  function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition);
+    } else {
+        console.log("Browser doesn't support Geolocation");
+        document.location="/home";
+    }
+  };
+
+  var options = {
+    enableHighAccuracy: true,
+    timeout: 5000,
+    maximumAge: 0
+  };
+
+  function success(pos) {
+    var crd = pos.coords;
+    console.log('Your current position is:');
+    console.log('Latitude : ' + crd.latitude);
+    console.log('Longitude: ' + crd.longitude);
+    console.log('More or less ' + crd.accuracy + ' meters.');
+    document.location.href="/trace?session_id=#{params[:session_id]}&lat=" + crd.latitude + "&lng="+crd.longitude
+  };
+
+  function error(err) {
+    console.warn('ERROR(' + err.code + '): ' + err.message);
+  };
+
+
+  function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
+    var R = 6371; // Radius of the earth in km
+    var dLat = deg2rad(lat2-lat1);  // deg2rad below
+    var dLon = deg2rad(lon2-lon1); 
+    var a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2)
+      ; 
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    var d = R * c; // Distance in km
+    return d;
+  }
+
+  function deg2rad(deg) {
+    return deg * (Math.PI/180)
+  }
+
+
+  $(document).ready(function(){
+
+      //setTimeout(function(){navigator.geolocation.getCurrentPosition(success, error, options)}, 10000);
+      //directionsService = new google.maps.DirectionsService();
+      //autocomplete_to = new google.maps.places.Autocomplete((document.getElementById('address_to')),{ types: ['geocode'] });
+      //autocomplete_from = new google.maps.places.Autocomplete((document.getElementById('address_from')),{ types: ['geocode'] });
+      //browserSuportFlag= new Boolean();
+      //geocoder = new google.maps.Geocoder();
+      //geolocate();
+      //$("#address_to").val("Via Polibio, Roma");
+  });

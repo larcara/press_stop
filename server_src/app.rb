@@ -6,8 +6,9 @@ require 'therubyracer'
 require 'mongoid'
 require 'omniauth-twitter'
 require_relative "./atac_proxy.rb"
+require_relative "./alert.rb"
 require 'json/ext' # required for .to_json
-
+Mongoid.load!("./config/mongoid.yml")
 
 set :port, 8080
 set :bind, '0.0.0.0'
@@ -15,27 +16,10 @@ set :sessions, true
 
 
 
-class User
-	include Mongoid::Document	
-	field :username
-	field :provider
-	field :uid
-	field :oauth_type, type: String
-	field :oauth_token, type: String
-end
-
-class BusAlert
-  include Mongoid::Document
-  field :stop_number
-  field :line
-  field :percorso
-  field :alert_data
-  field :user_id, type: String
-end
 
 use OmniAuth::Builder do
-  consumer_key="QhvRe8fJsjvFKrxysw8jkygj0"
-  consumer_secret="HJCvYEPmuxYDiYMSOWg5oonw5zw2pyY148qmEj4IvdIUfvNL4b"
+  consumer_key=ENV["CONSUMER_KEY"]
+  consumer_secret=ENV["CONSUMER_SECRET"]
   provider :twitter, consumer_key, consumer_secret
 end
 
@@ -55,6 +39,21 @@ end
 
 get '/alerts' do
 	current_user!
+  # a=AtacProxy.new()
+  # @percorsi=a.get_percorsi("913")
+  # @percorsi.each do |percorso|
+  #    puts percorso[0]
+  #    @fermate=a.get_stops(percorso[0])
+  #    puts @fermate["percorso"].inspect
+  #    puts @fermate["percorsi"].inspect
+  #    puts @fermate["orari_partenza_vicini"].inspect
+  #    puts "--------------"
+  #    @fermate["fermate"].each do |fermata|
+  #     puts fermata.inspect
+  #     puts "........"
+  #    end
+  #  end
+  # return ""
 end
 
 get '/add_alert' do
@@ -65,16 +64,8 @@ end
 
 post '/add_alert' do
    current_user!
-   puts params.inspect
-   if params[:percorso]==""
-	@percorsi=AtacProxy.new().get_percorsi(params[:bus_line]) 
-	haml :add_alert
-   else
-   	alert=BusAlert.find_or_create_by(user_id: @current_user.id, stop_number: params[:bus_stop], line: params[:bus_line], percorso: params[:percorso])
-	redirect to("/alerts")
-   end
-
-
+   Alert.add_alert(line: params[:bus_line], stop: params[:bus_stop], user: @current_user)
+   redirect to("/alerts")
 end
 
 get '/auth/twitter/callback' do

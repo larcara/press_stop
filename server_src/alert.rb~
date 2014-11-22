@@ -1,0 +1,21 @@
+require 'mongoid'
+require_relative "./atac_proxy.rb"
+require 'twitter'
+Mongoid.load!("./config/mongoid.yml", "development")
+
+class BusAlert
+  include Mongoid::Document
+  field :stop_number
+  field :line
+  field :alert_data
+  field :user_id, type: String
+end
+
+
+atac=AtacProxy.new()
+BusAlert.all.each do |alert|
+  #paline.ProssimaPartenza(string token, string id_percorso, string lingua)
+  #puts atac.get_percorsi(alert.line.to_i)
+  puts atac.get_stops(alert.percorso.to_i)
+end
+

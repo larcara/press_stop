@@ -1,0 +1,10 @@
+%html{:lang => "en"}
+  %head
+    
+  %body
+:javascript
+  navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
+  if (navigator.vibrate) {
+    navigator.vibrate([500, 300, 100]);
+  }
+

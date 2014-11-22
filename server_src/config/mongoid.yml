@@ -1,0 +1,24 @@
+# Tell Mongoid which environment this configuration is for.
+development:
+  sessions:
+    default:
+      hosts:
+        - localhost:27018
+        #- kahana.mongohq.com:10050
+      database: pres_stop
+      #username: pres_stop
+      #password: averysimplepassword
+  options:
+    #allow_dynamic_fields: false
+    #identity_map_enabled: true
+    include_root_in_json: true
+    include_type_for_serialization: true
+    preload_models:
+      #- Canvas
+      #- Browser
+      #- Firefox
+    scope_overwrite_exception: true
+    raise_not_found_error: false
+    #skip_version_check: false
+    use_activesupport_time_zone: false
+    use_utc: true

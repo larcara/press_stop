@@ -1,0 +1,15 @@
+%html{:lang => "en"}
+  %head
+  %body
+  %form{action: :add_alert, method: :post}
+    %p stop
+    %input{name: :bus_stop, value: params[:bus_stop]}
+    %p line
+    %input{name: :bus_line, value: params[:bus_line]}
+    %p percorsi
+    %select{name: :percorso}
+      -@percorsi.each do |x|
+        %option{value: x[0]}=x[1] 
+
+    %input{type: :submit}
+

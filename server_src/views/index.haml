@@ -1,0 +1,18 @@
+%html{:lang => "en"}
+  %head
+    
+  %body
+:javascript
+  function getLocation() {
+      if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(showPosition);
+      } else {
+          console.log("Browser doesn't support Geolocation");
+          document.location="/home";
+      }
+  };
+  function showPosition(position) {
+      console.log("Position: " + position);
+      document.location="/home?lat="+ position.coords.latitude + "&lng=" + position.coords.longitude; 
+  }
+  getLocation();
